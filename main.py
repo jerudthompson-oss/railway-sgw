@@ -158,17 +158,40 @@ def run_once():
     print("RUN DONE", time.strftime("%Y-%m-%d %H:%M:%S"))
 
 
+def next_interval_minutes():
+    """Pick the wait (minutes) based on current CENTRAL time + day:
+      Midnight-8AM   -> 180 min (overnight, quiet)
+      8AM-5PM        -> 60 min  (daytime)
+      5PM-Midnight   -> 30 min  (evening rush)
+        ...but Fri & Sat 5PM-Midnight -> 15 min (weekend peak closings)
+    """
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+    now = datetime.now(ZoneInfo("America/Chicago"))
+    hour = now.hour
+    weekday = now.weekday()        # Mon=0 ... Fri=4, Sat=5, Sun=6
+    if hour < 8:                   # overnight
+        return 180
+    elif hour < 17:                # daytime
+        return 60
+    else:                          # 5PM-midnight evening rush
+        if weekday in (4, 5):      # Friday or Saturday evening
+            return 15
+        return 30
+
+
 def main():
-    interval_min = int(os.environ.get("RUN_INTERVAL_MIN", "60"))
-    print(f"Email runner started. Interval: {interval_min} min.")
+    print("Email runner started. Schedule (Central): "
+          "overnight=3h, day=1h, 5pm-midnight=30min.")
     while True:
         try:
             run_once()
         except Exception as e:
             print("ERROR during run:", e)
             traceback.print_exc()
-        print(f"Sleeping {interval_min} min...\n")
-        time.sleep(interval_min * 60)
+        wait = next_interval_minutes()
+        print(f"Sleeping {wait} min until next run...\n")
+        time.sleep(wait * 60)
 
 
 if __name__ == "__main__":
