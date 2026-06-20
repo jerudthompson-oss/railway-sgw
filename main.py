@@ -6,26 +6,31 @@ Runs on Railway. Every RUN_INTERVAL_MIN minutes it:
   2. Builds the combed, flagged, value-ranked worklist
   3. Emails you a phone-readable summary + attaches the full CSV
 
-No Google Cloud / service-account keys needed (those are blocked on
-personal accounts). Uses plain SMTP with a Gmail App Password.
+No Google Cloud / SMTP needed. Sends via the Resend HTTPS API because
+Railway blocks outbound SMTP ports (465/587).
 
 ENV VARS (set in Railway, never in code):
-  GMAIL_ADDRESS      -> your gmail, e.g. you@gmail.com  (the sender)
-  GMAIL_APP_PASSWORD -> 16-char App Password (NOT your normal password)
-  EMAIL_TO           -> where to send (can be same gmail or another address)
-  RUN_INTERVAL_MIN   -> minutes between runs (optional, default 60)
-  MAX_EMAIL_ROWS     -> how many top items in the email body (optional, default 40)
+  RESEND_API_KEY   -> your Resend API key (starts with re_)
+  EMAIL_TO         -> where to send the worklist
+  EMAIL_FROM       -> sender; 'onboarding@resend.dev' works out of the box
+                      (optional, that's the default)
+  RUN_INTERVAL_MIN -> minutes between runs (optional, default 60)
+  MAX_EMAIL_ROWS   -> top items shown in the email body (optional, default 40)
 """
 
 import os
 import io
 import csv
 import time
-import smtplib
+import base64
 import traceback
-from email.message import EmailMessage
+
+import requests
 
 import sgw_core
+
+
+RESEND_ENDPOINT = "https://api.resend.com/emails"
 
 
 def build_csv_bytes(matrix):
@@ -108,25 +113,41 @@ def build_html(matrix, max_rows):
 
 
 def send_email(matrix):
-    sender = os.environ["GMAIL_ADDRESS"]
-    app_pw = os.environ["GMAIL_APP_PASSWORD"]
-    to_addr = os.environ.get("EMAIL_TO", sender)
+    """Send the worklist via the Resend HTTPS API (Railway blocks SMTP ports).
+
+    ENV VARS:
+      RESEND_API_KEY -> your Resend API key (starts with re_)
+      EMAIL_TO       -> recipient address
+      EMAIL_FROM     -> sender; use 'onboarding@resend.dev' until you verify
+                        a domain, or your own verified domain address.
+    """
+    api_key = os.environ["RESEND_API_KEY"]
+    to_addr = os.environ["EMAIL_TO"]
+    from_addr = os.environ.get("EMAIL_FROM", "onboarding@resend.dev")
     max_rows = int(os.environ.get("MAX_EMAIL_ROWS", "40"))
 
     n = len(matrix) - 1
-    msg = EmailMessage()
-    msg["Subject"] = f"SGW worklist: {n} items ({time.strftime('%I:%M %p')})"
-    msg["From"] = sender
-    msg["To"] = to_addr
-    msg.set_content("HTML email - open in an HTML-capable client.")
-    msg.add_alternative(build_html(matrix, max_rows), subtype="html")
-    msg.add_attachment(build_csv_bytes(matrix), maintype="text",
-                       subtype="csv", filename="bid_calculator.csv")
+    html = build_html(matrix, max_rows)
+    csv_b64 = base64.b64encode(build_csv_bytes(matrix)).decode("ascii")
 
-    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as s:
-        s.login(sender, app_pw)
-        s.send_message(msg)
-    print(f"Email sent to {to_addr} ({n} items).")
+    payload = {
+        "from": from_addr,
+        "to": [to_addr],
+        "subject": f"SGW worklist: {n} items ({time.strftime('%I:%M %p')})",
+        "html": html,
+        "attachments": [
+            {"filename": "bid_calculator.csv", "content": csv_b64}
+        ],
+    }
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+    }
+    r = requests.post(RESEND_ENDPOINT, json=payload, headers=headers, timeout=30)
+    if r.status_code in (200, 201):
+        print(f"Email sent to {to_addr} ({n} items). id={r.json().get('id')}")
+    else:
+        print(f"Resend API error {r.status_code}: {r.text[:300]}")
 
 
 def run_once():
