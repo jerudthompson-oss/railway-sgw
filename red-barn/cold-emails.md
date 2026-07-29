@@ -45,7 +45,7 @@ farms to send 20.** Better to know that now than at email seventeen.
 
 ## ⛔ Blocking issue
 
-`redbarncommerce.com` isn't bought and `jerud@redbarncommerce.com` doesn't exist.
+`redbarncommerce.com` isn't bought and `contact@redbarncommerce.com` doesn't exist.
 **None of these can send.** Domain (~$12, Porkbun or Cloudflare) plus Google
 Workspace (~$7/mo) is one sitting. That is now the only thing between you and a
 send — the copy below is done.
@@ -102,7 +102,7 @@ u-pick, pumpkin patch, farmstand, gift shop, hayrides.
 >
 > Jerud Thompson
 > Red Barn Commerce
-> jerud@redbarncommerce.com
+> contact@redbarncommerce.com
 
 ---
 
@@ -139,7 +139,7 @@ the list**, and note that ~20 crops sits neatly inside your 25-product cap.
 >
 > Jerud Thompson
 > Red Barn Commerce
-> jerud@redbarncommerce.com
+> contact@redbarncommerce.com
 
 ---
 
@@ -180,7 +180,7 @@ Best fit for a smaller scope, or your first "yes" at a discount you name.
 >
 > Jerud Thompson
 > Red Barn Commerce
-> jerud@redbarncommerce.com
+> contact@redbarncommerce.com
 
 ---
 
@@ -221,7 +221,7 @@ of, but you know your own social map — your call.
 >
 > Jerud Thompson
 > Red Barn Commerce
-> jerud@redbarncommerce.com
+> contact@redbarncommerce.com
 
 ---
 
@@ -254,7 +254,7 @@ a clean generic note.
 >
 > Jerud Thompson
 > Red Barn Commerce
-> jerud@redbarncommerce.com
+> contact@redbarncommerce.com
 
 ### Subject line bank
 
