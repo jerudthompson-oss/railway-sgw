@@ -29,16 +29,15 @@ new domain's sending reputation on bounces in exactly the week that matters.
 
 Drive times estimated from Gilbert.
 
+**Rev 3:** deep research on each farm cut this from 8 to 4. See `cold-emails.md`
+for the full reasoning and the drafted emails.
+
 | # | Farm | Address | ~Drive | Sells | Read |
 |---|---|---|---|---|---|
-| 1 | **Dowd Creek Ag, LLC** | 33575 Hwy S75, Liscomb, IA 50148 (Hardin) | 40 min | Diversified produce, many varieties | Choose Iowa describes them as having started to *"provide for the local community"* — a direct-to-neighbor operation, exactly the profile that runs on texts. **Best pure fit on the list.** |
-| 2 | **Van Manen Sweet Corn & Fresh Produce** | 8203 N 27th Ave E, Kellogg, IA 50135 (Jasper) | 60 min | Sweet corn, fresh produce | Name is the whole business model — seasonal, high-volume, perishable. Sweet corn season is a scheduling nightmare done by phone |
-| 3 | **Greg Rinehart** | 703 Kale Road, Boone, IA 50036 (Boone) | 30 min | Asparagus, sweet corn, tomatoes, green beans | Multigenerational; **runs a Saturday farmers market on their own farm.** Someone hosting a market on-site is already doing pickup logistics manually. Slightly close — judgment call |
-| 4 | **Dusty Hill Farm** | State Center, IA (Marshall) | 35 min | Vegetables, sweet corn, pumpkins, greenhouse | Sells at **4 farmers markets/week.** Already has `dustyhillfarm.square.site` — if that's a brochure page rather than real click-and-collect, this is your **warmest lead**: you're finishing something they started, not migrating them |
-| 5 | **Appleberry Farm** | 2402 W Main St, Marshalltown, IA 50158 · (641) 752-8443 | 45 min | Produce / orchard | Established, on-the-map, no e-commerce found |
-| 6 | **Greene Goods Market** | Jefferson, IA (Greene) | 55 min | Farm store, greenhouse, bedding plants, **holiday greens**, agritourism | Holiday greens = a hard November deadline and a fixed catalog. Nearly a perfect Square click-and-collect use case |
-| 7 | **Deal's Orchard** | Jefferson, IA (Greene) | 55 min | Apples, cider, sweet corn, pumpkins, corn maze, **u-cut Christmas trees** | Family farm since 1917. Fall *is* their year. Big enough that they may already have ordering — check before writing |
-| 8 | **Pleasant Grove Homestead** | Montezuma, IA (Poweshiek) | 75 min | Pastured poultry, pork, honey, eggs, produce | Owners **Ashley & Zachary Wenke** — you have names, which changes the email. Has a site with a mailing list, so partially solved; a mailing list without a store is a farm taking orders by reply |
+| 1 | **Appleberry Farm** | 2402 W Main St, Marshalltown, IA 50158 · (641) 752-8443 | 45 min | ~20 acres, two dozen apple varieties, u-pick, pumpkins, farmstand, hayrides | **Dave & Kelly Mason are in only their second year**, having taken over from Bob & Donna Atha who ran it 30+ years. New owners re-deciding inherited habits = the best possible moment to arrive. **Now #1.** |
+| 2 | **Dowd Creek Ag, LLC** | 33575 Hwy S75, Liscomb, IA 50148 (Hardin) | 40 min | ~20 crops, spring asparagus through winter squash; **farm stand + CSA** | Choose Iowa says they started to *"provide for the local community"* — neighbor-facing, the profile that runs on texts. **No website found anywhere.** ~20 crops fits inside your 25-product cap |
+| 3 | **Dusty Hill Farm** | 2026 Hart Ave, State Center, IA (Marshall) | 35 min | Vegetables, sweet corn, pumpkins, greenhouse | Founded 2009, ~1 employee. **Ames Downtown market Sat AM; Cartwright/Marshalltown Wed PM + Sat AM.** Already has `dustyhillfarm.square.site` — sell them the ordering half, not Square. Small operation; scope accordingly |
+| 4 | **Rinehart's Family Farm** | 703 Kale Road, Boone, IA 50036 · **Rinehartsfamilyfarm@gmail.com** | 30 min | **40 fruits & vegetables**, roadside stand 8am–8pm 7 days, Saturday market in their own yard | **The one published email I found.** CSA already runs on My Local CSA, so they'll pay for tooling — lead with that. Boone is closer than your stranger rule likes; your call |
 
 ## 2. Tier B — real and named, location or fit unconfirmed
 
@@ -60,6 +59,24 @@ Worth 60 seconds each in the Choose Iowa directory before they earn a slot.
 | 20 | Mulberry Farms | Listed among DSM-area CSAs | Town, status |
 
 ## 3. Disqualified
+
+### 🚩 Van Manen Sweet Corn — hard stop, employer conflict
+
+Van Manen sells sweet corn through **local Fareway and Hy-Vee stores**. They are a
+Fareway vendor; you are a Fareway category manager. Do not contact them, and add
+this to the qualification test: **check every farm against your employer's vendor
+list before emailing.**
+
+### ⚠️ Deal's Orchard — same risk, your check
+
+Sells produce into **many central Iowa grocery stores** and distributes hard cider
+through select grocers. Four generations, 45 acres, since 1917. Very likely a
+vendor relationship you'd recognize. Email held back pending your check.
+
+### Newly disqualified by research
+
+- **Pleasant Grove Homestead** — has a working online store at `pleasantgrovehomestead.com/shop-our-farm/`, with delivery, pickup, EBT, Double Up, WIC. Also relocating to Fremont. Already solved.
+- **Greene Goods Market** — `greenegoods.com` advertises national delivery, so e-commerce is live. Verify, but assume out.
 
 **Already run full online stores** — not customers. Screenshot them instead as
 "here's what your ordering page could look like": Farm Story Meats (3211 Lettie
@@ -127,20 +144,23 @@ Keep only if **all four** are true:
 - [ ] **No working online ordering.** A Facebook page, a Linktree, or a brochure site with a phone number all count as *no store* — those qualify, they don't disqualify
 - [ ] Has a **fall or holiday product**: CSA signups, turkeys, meat bundles, pumpkins, cider, holiday greens
 - [ ] You have a **real email address** off their own page
+- [ ] **They don't sell into your employer** — the Van Manen catch. Check this every time
 
-Drop anyone you know socially. Drop anyone with a Fareway connection.
+Drop anyone you know socially.
 
 ---
 
 ## 5. Honest count
 
-- **8** Tier A — confirmed address, in radius, strangers
+- **4** Tier A — researched, qualified, emails drafted
 - **12** Tier B — real names, needing one field
 - **5** held back for the stranger-first rule
-- **18** disqualified for distance, existing stores, or wrong model
+- **22** disqualified for distance, existing stores, wrong model, or employer conflict
 
-Realistically **8–12 survive** qualification today. Step 1 of §4 closes the gap
-to 20 in about fifteen minutes.
+**The number that matters: deep research killed 4 of 8 Tier A farms.** That's a
+~50% kill rate, which means **you need to qualify roughly 40 farms to send 20.**
+Budget accordingly — and note that a farm only looks qualified until you actually
+read about it.
 
 **Don't let this list become the project.** Failure mode #1 is spending both
 weeks on assets and sending zero emails. If §4 turns into a research afternoon,
