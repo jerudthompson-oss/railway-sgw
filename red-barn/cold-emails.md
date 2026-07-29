@@ -1,14 +1,42 @@
 # Red Barn Commerce — Cold Emails
 
-**Built:** 2026-07-29
-**Settings you chose:** 25 yrs Iowa grocery (employer unnamed) · free sample page as the ask · no price · no in-person reference · Gilbert local · 4–6 mockups capacity · Square account but no store built yet
+**Built:** 2026-07-29 · **Rev 2** — rewritten for tone
+**Settings you chose:** 25 yrs Iowa grocery (employer unnamed) · free sample page as the ask · no price · no in-person reference · Gilbert local · 4–6 mockups capacity · Square account but no store built yet · sending from `contact@redbarncommerce.com`
+
+---
+
+## Tone rules — apply these to all 20
+
+Rev 1 read as forward and cocky. Three things caused it. Keep these in mind when
+you write the other sixteen:
+
+1. **Don't diagnose their business.** "I'd guess," "I'd bet," "that's a lot to
+   track by hand" — a stranger telling a farmer what's broken is presumptuous.
+   Ask instead. *"I don't know how you're handling it now"* does the same work and
+   costs you nothing.
+2. **Don't flex the grocery background.** "Deciding what earns shelf space and
+   what actually moves" reads, to a farmer, as *I'm the man who decides whether
+   your product gets in* — and it implies they don't know their own market.
+   State it as a plain fact about where you came from, not as authority.
+3. **Don't grade them.** "Puts you ahead of most farms around here" ranks them
+   against their neighbors, uninvited.
+
+Two things to add on purpose:
+
+- **Give them an easy out in the email itself** — "or should I leave you to it?"
+  Counterintuitively this raises replies, because it removes the pressure that
+  makes people ignore cold mail.
+- **Allow that they may already be fine.** "You may have it sorted already" costs
+  one clause and removes all the presumption.
+
+Careful not to overcorrect into apologizing for existing. You're offering
+something useful for free. Modest, not meek.
 
 ---
 
 ## Read this first — research changed the list
 
-Digging into farm histories disqualified **four of the eight** Tier A farms. That's
-the process working, not failing, but it changes your numbers.
+Digging into farm histories disqualified **four of the eight** Tier A farms.
 
 ### 🚩 Van Manen Sweet Corn — hard stop, Fareway conflict
 
@@ -17,88 +45,79 @@ Fareway vendor. You are a Fareway category manager.
 
 Cold-emailing one of your employer's produce suppliers to sell them your own
 services is the exact situation your handoff's confidentiality and
-outside-employment constraints exist to prevent. It doesn't matter that the
-service is unrelated. **Do not contact them.** I've removed them entirely.
+outside-employment constraints exist to prevent. **Do not contact them.** Removed.
 
-This also raises a rule the list needs: **before you email any farm, check whether
-they sell into your employer.** You can do that entirely in your own head — no
-information needs to reach me for it.
+Rule this creates: **before you email any farm, check whether they sell into your
+employer.** That check happens entirely in your head — nothing needs to reach me.
 
 ### ⚠️ Deal's Orchard — same risk, needs your check
 
-Deal's "sells produce in many central Iowa grocery stores" and distributes hard
-cider through **select grocery stores**. Four generations, 45 acres, since 1917.
-They're very likely in a vendor relationship you'd recognize. **You check; I've
-held the email back.**
+Sells produce into **many central Iowa grocery stores** and distributes hard cider
+through select grocers. Four generations, 45 acres, since 1917. Very likely a
+vendor relationship you'd recognize. **You check; email held back.**
 
 ### Disqualified — already solved
 
-- **Pleasant Grove Homestead** — runs a real online store at `pleasantgrovehomestead.com/shop-our-farm/`. Already handles ordering, delivery, pickup, and accepts EBT/Double Up/WIC. Also relocating from Montezuma to Fremont. Not a prospect.
-- **Greene Goods Market** — `greenegoods.com` advertises **national delivery**, which means working e-commerce. Verify, but assume disqualified.
+- **Pleasant Grove Homestead** — real online store at `pleasantgrovehomestead.com/shop-our-farm/`, with delivery, pickup, EBT, Double Up, WIC. Also relocating to Fremont.
+- **Greene Goods Market** — `greenegoods.com` advertises national delivery, so e-commerce is live. Verify, but assume out.
 
-### What survived: four farms worth a tailored email
-
-That's a ~50% kill rate once you research properly. **Plan on qualifying ~40
-farms to send 20.** Better to know that now than at email seventeen.
+~50% kill rate once you research properly. **Plan on qualifying ~40 farms to send 20.**
 
 ---
 
 ## ⛔ Blocking issue
 
-`redbarncommerce.com` isn't bought and `contact@redbarncommerce.com` doesn't exist.
-**None of these can send.** Domain (~$12, Porkbun or Cloudflare) plus Google
-Workspace (~$7/mo) is one sitting. That is now the only thing between you and a
-send — the copy below is done.
+`redbarncommerce.com` isn't bought and `contact@redbarncommerce.com` doesn't
+exist. **None of these can send.** Domain (~$12, Porkbun or Cloudflare) plus
+Google Workspace (~$7/mo) is one sitting. That's the only thing between you and a
+send — the copy is done.
 
-**Second thing to do before sending:** you have a Square account but have never
-built a store. Every email below promises a free sample page. Spend one evening
-building a throwaway store with five fake products so the promise is real. I
-deliberately left out any turnaround date so you're not committed to a deadline
-you haven't tested.
+**Before sending:** you have a Square account but have never built a store. Every
+email promises a free sample page. Spend one evening building a throwaway store
+with five fake products so the promise is real. No turnaround date appears
+anywhere, so you're not committed to a deadline you haven't tested.
 
-**A caution on your credibility line.** "25 years in Iowa grocery retail" is
-strong and it's yours to claim. But farms that sell into grocery may well ask
-*which chain*. Decide your answer before you send, not while staring at a reply.
-"I'd rather keep my day job out of this — it's not who you'd be working with" is
-honest and closes the topic.
+**Have an answer ready for "which grocery chain?"** Farms that sell into grocery
+may ask. *"I'd rather keep my day job out of this — it's not who you'd be working
+with"* is honest and closes it.
 
 ---
 
 # The four emails
 
 Plain text. No logo, no signature image, no tracking pixel — all three hurt
-deliverability from a brand-new domain and read as bulk mail to a farmer.
+deliverability from a new domain and read as bulk mail.
 
 ---
 
 ## 1. Appleberry Farm — Marshalltown
 
-**Why they're first:** Dave and Kelly Mason are in **only their second year** as
-owners, having taken over from Bob and Donna Atha, who ran it for **30+ years**.
-New owners of an inherited operation are actively re-deciding how things get done.
-That is the single best moment to arrive. ~20 acres, two dozen apple varieties,
-u-pick, pumpkin patch, farmstand, gift shop, hayrides.
+Dave & Kelly Mason, second year as owners, took over from Bob & Donna Atha who ran
+it 30+ years. ~20 acres, two dozen apple varieties, u-pick, pumpkins, farmstand,
+hayrides.
 
-**Subject:** Your second fall at Appleberry
+*Changed: the previous version told them what was on their own to-do list. Now it
+just acknowledges the handover and stops.*
+
+**Subject:** Online ordering for Appleberry?
 
 > Dave and Kelly —
 >
-> I'm in Gilbert, just north of Ames.
+> My name's Jerud Thompson. I'm in Gilbert, just north of Ames.
 >
-> You're two seasons in after Bob and Donna ran the place for thirty-some years,
-> so I'd guess you've got a list of things you're doing differently than the way
-> you inherited them. Here's one I'd bet is on it: apple and pumpkin orders coming
-> in by phone, text, and Facebook comment all through October.
+> I spent 25 years in the Iowa grocery business, and these days I set up online
+> ordering and pickup pages for small farms — customer picks what they want, picks
+> a pickup time, and pays, so orders come to you in one place instead of your
+> phone.
 >
-> I spent 25 years in Iowa grocery retail deciding what earns shelf space and what
-> actually moves. Now I set up online ordering pages for farms — customer picks
-> their apples, picks a pickup window, pays. You get one list instead of a full
-> voicemail box.
+> I know you took the orchard over from the Athas a couple years back, so you've
+> had plenty on your plate already, and you may have the ordering side sorted
+> however you like it. If it's still phone calls and Facebook messages come
+> October, I'd be glad to put together a free sample page with a few of your
+> varieties, just so you can see whether it'd be any use. No cost and no
+> obligation either way.
 >
-> I'd like to build you a free sample page with a few of your varieties so you can
-> look at it instead of taking my word for it. No cost, no obligation.
->
-> Want me to?
+> Worth a look, or should I leave you to it?
 >
 > Jerud Thompson
 > Red Barn Commerce
@@ -108,34 +127,31 @@ u-pick, pumpkin patch, farmstand, gift shop, hayrides.
 
 ## 2. Dowd Creek Ag — Liscomb (Hardin County)
 
-**Why they're strong:** Choose Iowa lists them as a diversified farm that started
-to *"provide for the local community"* — a neighbor-facing operation, which is the
-profile that runs on texts. They sell through **both a farm stand and a CSA**, and
-grow roughly **20 crops**: apples, asparagus, beans, beets, brussels sprouts,
-cabbage, carrots, cauliflower, sweet corn, lettuce, onions, peppers, pumpkins,
-rhubarb, squash, tomatoes, zucchini. No website found anywhere. **Cleanest fit on
-the list**, and note that ~20 crops sits neatly inside your 25-product cap.
+Diversified farm that started to *"provide for the local community."* Farm stand
+**and** CSA, ~20 crops from spring asparagus to winter squash. No website found
+anywhere. Cleanest fit on the list.
 
-**Subject:** Your CSA signups, minus the texting
+*Changed: dropped "that's a lot to track by hand," which told them their own job
+is hard.*
+
+**Subject:** Online ordering for the stand and CSA?
 
 > Hello —
 >
-> I'm in Gilbert, just north of Ames. I came across Dowd Creek through Choose
-> Iowa.
+> My name's Jerud Thompson. I'm in Gilbert, just north of Ames — I came across
+> Dowd Creek on the Choose Iowa directory.
 >
-> Between the stand and the CSA you're moving something like twenty different
-> crops — asparagus in spring straight through to winter squash and pumpkins.
-> That's a lot to track by hand, and I'd guess CSA signups and fall orders arrive
-> by text, phone, and Facebook.
+> I spent 25 years in the Iowa grocery business, and these days I set up online
+> ordering and pickup pages for small farms. Customer picks what they want, picks
+> a pickup time, pays, and the orders come to you in one list.
 >
-> I spent 25 years in Iowa grocery retail deciding what earns shelf space and what
-> actually moves. Now I set up online ordering pages for farms — customer orders,
-> picks a pickup window, pays up front. You get one list.
+> With the stand and the CSA both going you may well have a system that suits you
+> already, and if so I'll not bother you about it. If signups and fall orders are
+> still coming in by text and Facebook, I'd be happy to build you a free sample
+> page with a few of your crops so you can see whether it's worth anything to you.
+> No cost, no obligation.
 >
-> Let me build you a free sample page with a handful of your crops so you can see
-> it rather than take my word for it. No cost, no obligation.
->
-> Interested?
+> Any interest?
 >
 > Jerud Thompson
 > Red Barn Commerce
@@ -145,36 +161,30 @@ the list**, and note that ~20 crops sits neatly inside your 25-product cap.
 
 ## 3. Dusty Hill Farm — State Center (Marshall County)
 
-**The angle is different here.** Founded 2009, roughly one employee. They already
-have `dustyhillfarm.square.site`, and they sell at the **Ames Downtown market
-Saturday mornings** and **Cartwright market in Marshalltown Wednesday afternoons
-and Saturday mornings**. Don't sell them Square — they bought in years ago. Sell
-them the half they're missing.
+Founded 2009, ~1 employee. Already has `dustyhillfarm.square.site`. Sells at Ames
+Downtown market Saturday mornings and Cartwright/Marshalltown Wednesday afternoons
+and Saturday mornings.
 
-**Heads up:** this is a small operation. Your founding rate is real money to them.
-Best fit for a smaller scope, or your first "yes" at a discount you name.
+*Changed: "puts you ahead of most farms around here" graded them against their
+neighbors. Now it concedes they may know more than he does — which is also true.*
 
-**Subject:** You've already got the Square page
+**Subject:** The ordering side of your Square page
 
 > Hello —
 >
-> I'm in Gilbert, just north of Ames.
+> My name's Jerud Thompson. I'm in Gilbert, just north of Ames.
 >
-> I noticed Dusty Hill already has a Square site up, which puts you ahead of most
-> farms around here — you clearly don't need convincing that this stuff is worth
-> doing.
+> I spent 25 years in the Iowa grocery business, and these days I set up online
+> ordering and pickup pages for small farms.
 >
-> What I'd guess it doesn't do yet is take the actual order: customer picks their
-> pumpkins or their hanging baskets, picks a pickup window, pays, and you've got
-> the list before you load the truck for Ames on Saturday or Cartwright on
-> Wednesday.
+> I saw you already have a Square site up, so you may be well ahead of me on this.
+> The part I do is the ordering side — customer picks their plants or their
+> pumpkins, picks a pickup time, pays, and you've got the list before you load up
+> for Ames or Marshalltown.
 >
-> That last part is what I set up. Twenty-five years in Iowa grocery retail taught
-> me what actually moves and what just takes up space — an ordering page is the
-> same problem.
->
-> I'll build a free sample with a few of your products so you can see the
-> difference. No cost, no obligation.
+> If that's already running, ignore me. If not, I'd be happy to put together a
+> free sample with a few of your products so you can see what it looks like. No
+> cost, no obligation.
 >
 > Worth a look?
 >
@@ -184,40 +194,32 @@ Best fit for a smaller scope, or your first "yes" at a discount you name.
 
 ---
 
-## 4. Rinehart's Family Farm — Boone
+## 4. Rinehart's Family Farm — Boone → `Rinehartsfamilyfarm@gmail.com`
 
-**Published email: `Rinehartsfamilyfarm@gmail.com`** — the one real address I
-found. 703 Kale Road. Row-crop family who also grow **40 different fruits and
-vegetables**, run a roadside stand **8am–8pm, seven days a week**, and host the
-Saturday farmers market **in their own yard**. CSA signups already run through a
-third-party platform (My Local CSA), so lead with that — they've proven they'll
-pay for tooling.
+703 Kale Road. Row-crop family who also grow 40 fruits and vegetables, roadside
+stand 8am–8pm seven days, Saturday market in their own yard. CSA already runs on
+My Local CSA.
 
-**One judgment call:** Boone is ~30 minutes, closer than your stranger rule likes,
-and it's Red Granite's county. Different operation and no church overlap I know
-of, but you know your own social map — your call.
+*Changed: "you're running about as much direct-to-customer as a farm can" was
+flattery doubling as an assessment. Now it allows that keeping the stand simple
+may be a deliberate choice — because it might be.*
 
-**Subject:** Your CSA's on someone else's platform
+**Subject:** Online ordering for the stand?
 
 > Hello —
 >
-> I'm in Gilbert, just up the road.
+> My name's Jerud Thompson. I'm in Gilbert, just up the road from you.
 >
-> You're running about as much direct-to-customer as a farm can — 40 crops, the
-> stand open 8 to 8 every day, and a market in your own yard on Saturdays.
+> I spent 25 years in the Iowa grocery business, and these days I set up online
+> ordering and pickup pages for small farms.
 >
-> Your CSA signups already run through My Local CSA, so you know the value of not
-> writing down every order by hand. What that doesn't cover is everything else:
-> the stand, the sweet corn, the fall pickups.
+> I noticed your CSA signups run through My Local CSA, so you've thought about
+> this more than most folks have. I don't know whether you've ever wanted the same
+> thing for the stand and the sweet corn, or whether you'd sooner keep that part
+> simple.
 >
-> I spent 25 years in Iowa grocery retail deciding what earns shelf space and what
-> actually moves. I set up online ordering pages for farms — your products, your
-> pickup windows, paid up front, one list.
->
-> Free sample page with a few of your crops, no cost and no obligation, so you can
-> see it.
->
-> Want one?
+> If it's worth a look, I'd be glad to build you a free sample page with a few of
+> your crops — no cost, no obligation. If not, no trouble at all.
 >
 > Jerud Thompson
 > Red Barn Commerce
@@ -227,30 +229,26 @@ of, but you know your own social map — your call.
 
 # Template for the other 16
 
-Fill the three bracketed slots. **If you can't fill slot 1 with something real
-and specific, don't fake it** — a wrong guess about someone's farm is worse than
-a clean generic note.
-
-**Subject:** `[Their fall product] orders this year`
+**Subject:** `Online ordering for [Farm name]?`
 
 > Hello —
 >
-> I'm in Gilbert, just north of Ames.
+> My name's Jerud Thompson. I'm in Gilbert, just north of Ames.
 >
-> [ONE TRUE SPECIFIC — years in business, who runs it, which markets they sell at,
-> what they're known for, a recent change. One sentence.]
+> I spent 25 years in the Iowa grocery business, and these days I set up online
+> ordering and pickup pages for small farms — customer picks what they want, picks
+> a pickup time, and pays, so orders come to you in one list.
 >
-> I'd guess [THEIR FALL THING — CSA signups, Thanksgiving turkeys, meat bundles,
-> pumpkins, holiday greens] still comes in by text, phone, and Facebook comment.
+> [ONE TRUE SPECIFIC, stated as fact, not as diagnosis — how long they've been
+> going, who runs it, which markets they sell at, what they're known for.] You may
+> have the ordering side sorted however you like it already.
 >
-> I spent 25 years in Iowa grocery retail deciding what earns shelf space and what
-> actually moves. Now I set up online ordering pages for farms — customer orders,
-> picks a pickup window, pays up front. You get one list.
+> If [THEIR FALL THING — CSA signups, Thanksgiving turkeys, meat bundles,
+> pumpkins] is still coming in by phone and Facebook, I'd be glad to put together
+> a free sample page with a few of your products so you can see whether it'd be
+> any use. No cost, no obligation.
 >
-> Let me build you a free sample page with a few of your products so you can see it
-> rather than take my word for it. No cost, no obligation.
->
-> Interested?
+> Worth a look, or should I leave you to it?
 >
 > Jerud Thompson
 > Red Barn Commerce
@@ -258,26 +256,27 @@ a clean generic note.
 
 ### Subject line bank
 
-Specific beats clever. Never use the same subject twice in one batch.
+Plain beats clever. Never repeat a subject within one batch.
 
-- `Your fall orders this year`
-- `[Farm name] pickup orders`
+- `Online ordering for [Farm name]?`
+- `Online ordering for the stand?`
 - `Question about your CSA signups`
-- `Thanksgiving orders out of your inbox`
-- `Your [product] orders`
+- `Pickup orders for the fall?`
+- `[Farm name] — online ordering?`
 
-### The one follow-up — send 6 days later, same thread
+### The one follow-up — 6 days later, same thread
 
 Once. Not twice.
 
 > Hello again —
 >
-> Following up once in case this got buried — fair enough if the answer's no.
+> Following up just once, in case this got buried. No trouble at all if it's not
+> for you.
 >
-> The offer stands: a free sample ordering page for your farm, no cost or
-> obligation, just so you can see what it'd look like.
+> The offer's open if you'd like a free sample ordering page for the farm — no
+> cost, no obligation.
 >
-> If it's not useful, no hard feelings and I won't email again.
+> Either way I won't email again. Good luck with the season.
 >
 > Jerud
 
@@ -289,14 +288,13 @@ Once. Not twice.
 - [ ] Build one throwaway Square store so the sample-page promise is real
 - [ ] Decide your answer to "which grocery chain?"
 - [ ] **Check each farm against your employer's vendor list. Drop any match.**
-- [ ] Send in batches of 5, on a weekday morning, plain text
-- [ ] Reply to every response within 24 hours — this whole thing dies on slow replies
+- [ ] Send in batches of 5, weekday morning, plain text
+- [ ] Reply to every response within 24 hours — this dies on slow replies
 - [ ] Stop at 4–6 sample-page takers; that's your ceiling at 3–6 hrs/week
 
 **If it hits day 12 and the domain still isn't bought, buy it that night and send
-the four tailored emails from it.** Four researched emails to farms you actually
-understand beats twenty generic ones. The escape hatch in your plan says send
-anyway — it's right.
+these four.** Four researched emails beat twenty generic ones, and your plan's
+escape hatch is right that sending beats polishing.
 
 ---
 
@@ -304,11 +302,9 @@ anyway — it's right.
 
 - [Choose Iowa — Dowd Creek Ag, LLC](https://www.chooseiowa.com/dowd-creek-ag-llc)
 - [Choose Iowa — Van Manen Sweet Corn & Fresh Produce](https://www.chooseiowa.com/van-manen-sweet-corn-fresh-produce)
-- [Iowa Farm Bureau — "Summer gold" (Van Manen family profile, Fareway/Hy-Vee distribution)](https://www.iowafarmbureau.com/Article/Summer-gold)
-- [Hometown Press — Van Manen receives $25,000 grant](https://www.hometownpressia.com/news/van-manen-sweet-corn-grant/)
+- [Iowa Farm Bureau — "Summer gold" (Van Manen family; Fareway/Hy-Vee distribution)](https://www.iowafarmbureau.com/Article/Summer-gold)
 - [ISU Extension Visit Iowa Farms — Appleberry Farm](https://www.visitiowafarms.org/appleberry-farm)
 - [Appleberry Farm](http://www.appleberryfarm.com/)
-- [Appleberry Farm — Facebook](https://www.facebook.com/appleberryfarmiowa/)
 - [Dusty Hill Farm — Facebook](https://www.facebook.com/dustyhillfarm/)
 - [Dusty Hill Farm — Square site](https://dustyhillfarm.square.site/)
 - [Choose Iowa — Greg Rinehart](https://www.chooseiowa.com/greg-rinehart)
@@ -316,8 +312,5 @@ anyway — it's right.
 - [Rinehart's CSA — My Local CSA](https://mylocalcsa.com/Rinehartsfamilyfarm/)
 - [Iowa HHS — Rinehart's Family Farm roadside stand](https://hhs.iowa.gov/locations/rineharts-family-farm-roadsidefarm-stand)
 - [Pleasant Grove Homestead — online store](https://pleasantgrovehomestead.com/shop-our-farm/)
-- [Practical Farmers of Iowa — Ashley and Zachary Wenke](https://practicalfarmers.org/programs/beginning-farmers/savings-incentive-program/past-savings-incentive-program-classes/savings-incentive-program-class-of-2024/ashley-and-zachary-wenke/)
 - [Greene Goods Market](https://greenegoods.com/)
-- [Travel Iowa — Greene Goods Market & Greenhouses](https://www.traveliowa.com/places/greene-goods-market-and-greenhouses/7059/)
 - [Deal's Orchard](https://dealsorchard.com/hard-cider/)
-- [Travel Iowa — Deal's Orchard](https://www.traveliowa.com/places/deal-s-orchard/2586/)
