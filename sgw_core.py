@@ -81,12 +81,19 @@ LANE_KEYWORDS = {
               "panini", "bowman", "donruss", "fleer", "upper deck", "graded",
               "rookie", "card lot", "trading card", "trading cards",
               "autograph", "numbered", "refractor"],
-    "nfl": ["nfl", "football card", "panini prizm", "donruss football",
+    "nfl": ["nfl", "football", "panini prizm", "donruss football",
             "rookie card", "patch auto", "tom brady", "mahomes", "jersey",
-            "super bowl", "quarterback", "touchdown",
+            "super bowl", "quarterback", "touchdown", "riddell", "helmet",
             "chiefs", "kansas city", "patrick mahomes", "travis kelce",
             "kelce", "isiah pacheco", "rashee rice", "xavier worthy",
-            "andy reid", "chiefs kingdom"],
+            "andy reid", "chiefs kingdom",
+            "packers", "cowboys", "eagles", "49ers", "niners", "bears",
+            "lions", "vikings", "broncos", "raiders", "chargers", "bills",
+            "dolphins", "patriots", "steelers", "ravens", "bengals",
+            "browns", "texans", "colts", "jaguars", "titans", "commanders",
+            "saints", "falcons", "panthers", "buccaneers", "seahawks",
+            "ny giants", "new york giants", "ny jets", "new york jets",
+            "arizona cardinals", "la rams", "los angeles rams"],
     "toys": ["lego", "star wars", "transformers", "gi joe", "teenage mutant",
              "tmnt", "my little pony", "fisher price", "vintage toy", "kenner",
              "playmates", "minifig", "funko", "hot wheels", "action figure",
@@ -492,32 +499,55 @@ def build_ebay_query(title, lanes=""):
     return " ".join(out)
 
 
-def build_calculator_rows():
-    """Return the calculator as a list-of-lists (header + rows) with live
-    Sheets formulas. Reused by both the CSV writer and the cloud Sheets push.
-    Note: formulas use A1-style refs, so row order here defines the refs.
+# Bulk/estate lot detection (from the dashboard build): eBay can't comp a
+# mystery box, so these get tagged BULK for a photo check instead.
+BULK_RE = re.compile(
+    r"\blot of\b|\bbox of\b|\bbag of\b|\bbundle\b|\bassorted\b|\bmixed\b"
+    r"|\bvariety\b|\bgrab bag\b|\bestate\b|\bpallet\b|\bbulk\b|\btote\b"
+    r"|\bwholesale\b|\breseller\b|\b\d{2,}\s*(pc|pcs|pieces|items|cards)\b",
+    re.I)
+
+
+def build_worklist():
+    """Scrape, comp, and score -> list of rich item dicts for the dashboard
+    email and CSV. NFL-only by default (LANES env: comma list, or 'all').
 
     Value side: live eBay Browse comps via ebay_comps (same engine as the
     HiBid build) for the most-contested candidates up to MAX_EBAY_LOOKUPS
     per run; everything else falls back to the title heuristic. Flag,
     don't cut: no comp -> VERIFY, never silently dropped."""
+    import sgw_seen
+
     MIN_NET = float(os.environ.get("NET_FLOOR", "20"))
     EBAY_FEE = float(os.environ.get("EBAY_FEE_RATE", "0.13"))
     SLOW_MIN_NET = float(os.environ.get("SLOW_MIN_NET", "40"))
     MAX_EBAY_LOOKUPS = int(os.environ.get("MAX_EBAY_LOOKUPS", "150"))
     POLITE_DELAY = float(os.environ.get("POLITE_DELAY", "0.3"))
+    MIN_BIDS = int(os.environ.get("MIN_BIDS", "1"))
+    lanes_want = [s.strip() for s in
+                  os.environ.get("LANES", "nfl").split(",") if s.strip()]
+
+    def lane_ok(lanes):
+        if not lanes:
+            return False
+        if "all" in lanes_want:
+            return True
+        tags = lanes.split(",")
+        return any(w in tags for w in lanes_want)
 
     rows = collect_rows()
-    cand = [r for r in rows if r["lanes"] and _to_int(r["num_bids"]) >= 1]
+    cand = [r for r in rows
+            if lane_ok(r["lanes"]) and _to_int(r["num_bids"]) >= MIN_BIDS]
     # Most-contested first: these get the eBay lookup budget.
     cand.sort(key=lambda r: -_to_int(r["num_bids"]))
 
     lookups = 0
-    scored = []
+    items = []
     for r in cand:
         title = r["title"]
         est, conf, note = estimate_sold(title)  # heuristic fallback
         sell_speed = "unknown"
+        comps = 0
 
         if lookups < MAX_EBAY_LOOKUPS:
             comp = ebay_comps.estimate_cached(build_ebay_query(title, r["lanes"]))
@@ -528,8 +558,9 @@ def build_calculator_rows():
             if comp["resale_usd"]:
                 est = comp["resale_usd"]
                 sell_speed = comp["sell_speed"]
-                conf = "H" if comp["comps"] >= 8 else "M"
-                note = (f"eBay {comp['comps']} asks ~${est:.0f}"
+                comps = comp["comps"]
+                conf = "H" if comps >= 8 else "M"
+                note = (f"eBay {comps} asks ~${est:.0f}"
                         f" · {sell_speed} mover")
                 if _untested(title.lower()):
                     est = round(est * 0.45, 2)
@@ -549,49 +580,85 @@ def build_calculator_rows():
         est_max = est - est * EBAY_FEE - ship_f - ob - MIN_NET
         net_at_current = est - est * EBAY_FEE - price - ship_f - ob
         generic = note.startswith("generic")
-        if est_max <= 0 and conf in ("H", "M"):
-            status = "SKIP (est below $20)"
+        bulk = bool(BULK_RE.search(title))
+        if bulk:
+            status = "BULK"
+            note = "BULK lot — check photos; comp unreliable. " + note
+        elif est_max <= 0 and conf in ("H", "M"):
+            status = "SKIP (est below $%.0f)" % MIN_NET
         elif sell_speed == "slow" and net_at_current < SLOW_MIN_NET:
             status = f"SKIP (slow mover, net < ${SLOW_MIN_NET:.0f})"
         elif generic or conf == "L":
             status = "VERIFY - value uncertain"
         else:
             status = "REVIEW"
-        scored.append((r, est, conf, note, ob, ship, est_max, status))
+
+        items.append({
+            "item_id": r["item_id"], "title": title, "link": r["link"],
+            "image_url": r.get("image_url") or "",
+            "lanes": r["lanes"], "status": status, "conf": conf,
+            "note": note, "bids": _to_int(r["num_bids"]), "price": price,
+            "time_left": (r["remaining_time"] or "").strip(),
+            "sgw_ship": ship_f, "outbound": ob,
+            "est": est, "comps": comps, "sell_speed": sell_speed,
+            "max_bid": round(max(est_max, 0.0), 2),
+            "net_at_current": round(net_at_current, 2),
+            "is_new": sgw_seen.is_new(r["item_id"]),
+        })
 
     def _status_rank(s):
         if s == "REVIEW":
             return 0
-        if s.startswith("VERIFY"):
+        if s == "BULK":
             return 1
-        return 2
+        if s.startswith("VERIFY"):
+            return 2
+        return 3
 
     conf_rank = {"H": 0, "M": 1, "L": 2}
-    scored.sort(key=lambda x: (_status_rank(x[7]),
-                               conf_rank.get(x[2], 3), -x[6]))
+    # NEW items float to the top of each status band.
+    items.sort(key=lambda w: (_status_rank(w["status"]), not w["is_new"],
+                              conf_rank.get(w["conf"], 3),
+                              -(w["net_at_current"] or -999)))
+
+    n_new = sum(1 for w in items if w["is_new"] and not w["status"].startswith("SKIP"))
+    n_review = sum(1 for w in items if w["status"] == "REVIEW")
+    n_bulk = sum(1 for w in items if w["status"] == "BULK")
+    n_verify = sum(1 for w in items if w["status"].startswith("VERIFY"))
+    n_skip = sum(1 for w in items if w["status"].startswith("SKIP"))
+    print(f"Worklist: {len(items)} contested | {n_new} NEW | {n_review} REVIEW "
+          f"| {n_bulk} BULK | {n_verify} VERIFY | {n_skip} SKIP")
+    return items
+
+
+def worklist_to_matrix(items):
+    """Dashboard worklist -> 16-col calculator matrix (header + rows) with
+    live Sheets formulas, for the CSV attachment and desk work.
+    Note: formulas use A1-style refs, so row order defines the refs."""
+    MIN_NET = float(os.environ.get("NET_FLOOR", "20"))
+    EBAY_FEE = float(os.environ.get("EBAY_FEE_RATE", "0.13"))
 
     header = ["Item", "Lanes", "Status", "Bids", "Current Bid", "Time Left",
               "SGW Ship", "Est Sold (rough)", "Conf", "Note",
               "PASTE Comp Here", "Outbound Ship", "MAX BID ($20 floor)",
               "Proj Net", "Clears $20?", "Link"]
     out = [header]
-    for idx, (r, est, conf, note, ob, ship, est_max, status) in enumerate(scored, start=2):
+    for idx, w in enumerate(items, start=2):
         maxbid = (f'=IF(K{idx}="","",'
                   f'K{idx}-K{idx}*{EBAY_FEE}-G{idx}-L{idx}-{MIN_NET})')
         projnet = (f'=IF(K{idx}="","",'
                    f'K{idx}-K{idx}*{EBAY_FEE}-E{idx}-G{idx}-L{idx})')
         clears = (f'=IF(K{idx}="","",IF(N{idx}>={MIN_NET},"YES","no"))')
-        out.append([r["title"], r["lanes"], status, r["num_bids"],
-                    r["current_price"], (r["remaining_time"] or "").strip(),
-                    ship, est, conf, note, "", ob, maxbid, projnet, clears,
-                    r["link"]])
-
-    n_review = sum(1 for x in scored if x[7] == "REVIEW")
-    n_verify = sum(1 for x in scored if x[7].startswith("VERIFY"))
-    n_skip = sum(1 for x in scored if x[7].startswith("SKIP"))
-    print(f"Calculator: {len(cand)} contested | {n_review} REVIEW "
-          f"| {n_verify} VERIFY | {n_skip} SKIP")
+        out.append([w["title"], w["lanes"], w["status"], w["bids"],
+                    w["price"], w["time_left"], w["sgw_ship"], w["est"],
+                    w["conf"], w["note"], "", w["outbound"], maxbid,
+                    projnet, clears, w["link"]])
     return out
+
+
+def build_calculator_rows():
+    """Back-compat wrapper: worklist rendered as the calculator matrix."""
+    return worklist_to_matrix(build_worklist())
 
 
 def write_bid_calculator(rows):

@@ -45,7 +45,7 @@ OAUTH_URL  = "https://api.ebay.com/identity/v1/oauth2/token"
 BROWSE_URL = "https://api.ebay.com/buy/browse/v1/item_summary/search"
 SCOPE      = "https://api.ebay.com/oauth/api_scope"
 
-_token = {"value": None, "expires": 0}
+_token = {"value": None, "expires": 0, "failed_until": 0}
 
 
 def _have_creds() -> bool:
@@ -57,6 +57,10 @@ def _get_token() -> str | None:
         return None
     if _token["value"] and time.time() < _token["expires"] - 60:
         return _token["value"]
+    # After a failed OAuth, don't retry for 10 min: one 401 in the log
+    # instead of one per item, and no pointless per-item HTTP round trips.
+    if time.time() < _token["failed_until"]:
+        return None
     basic = base64.b64encode(
         f"{EBAY_CLIENT_ID}:{EBAY_CLIENT_SECRET}".encode()).decode()
     r = requests.post(
@@ -67,7 +71,9 @@ def _get_token() -> str | None:
         timeout=30,
     )
     if r.status_code != 200:
-        print(f"[ebay] OAuth failed {r.status_code}: {r.text[:160]}")
+        print(f"[ebay] OAuth failed {r.status_code}: {r.text[:160]} "
+              f"(pausing eBay lookups 10 min)")
+        _token["failed_until"] = time.time() + 600
         return None
     j = r.json()
     _token["value"] = j["access_token"]
