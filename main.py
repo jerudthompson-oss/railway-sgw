@@ -182,7 +182,7 @@ def next_interval_minutes():
 
 def main():
     print("Email runner started. Schedule (Central): "
-          "overnight=3h, day=1h, 5pm-midnight=30min.")
+          "overnight=3h, day=1h, 5pm-midnight=30min (Fri/Sat 15min).")
     while True:
         try:
             run_once()
