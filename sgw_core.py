@@ -20,11 +20,16 @@ RUN: python sgw_ending_soon.py
 """
 
 import csv
+import html
 import json
+import os
+import re
 import time
 from datetime import datetime
 from zoneinfo import ZoneInfo
 import requests
+
+import ebay_comps
 
 # SGW API timestamps are Pacific time. Compare against Pacific "now" so the
 # minutes-left math is correct regardless of your local timezone.
@@ -438,38 +443,131 @@ def write_bid_calculator(rows):
       Proj Net = your profit if you won at the current bid
       Clears $20? = YES/no against the flat per-item floor
     """
+# ---- eBay query builder: turn an SGW title into a focused search phrase ----
+# Same stop-word comb as the HiBid build, plus card-aware extras: for
+# cards/NFL items the year, grading (PSA/BGS/SGC/CGC + grade) and card
+# number are what actually set the price, so they always survive the cap.
+_STOP = {"new", "in", "box", "the", "and", "of", "a", "with", "lot", "lots",
+         "vintage", "rare", "set", "pcs", "pc", "nib", "sealed", "loose",
+         "untested", "as-is", "for", "parts", "read", "see", "good", "great",
+         "condition", "used", "works", "tested", "bundle", "assorted", "mixed"}
+
+_GRADE_RE = re.compile(r"\b(psa|bgs|sgc|cgc)\s*-?\s*(10|9\.5|9|8\.5|8|7)\b", re.I)
+_CARDNUM_RE = re.compile(r"#\s*([A-Za-z0-9\-]{1,12})\b")
+_YEAR_RE = re.compile(r"\b(19[5-9]\d|20[0-2]\d)\b")
+
+
+def build_ebay_query(title, lanes=""):
+    title = html.unescape(title or "")
+    toks = re.findall(r"[A-Za-z0-9'\-]+", title)
+    base = [t for t in toks if t.lower() not in _STOP and len(t) > 1]
+
+    keep = base[:8]
+
+    blob = f"{title} {lanes}".lower()
+    is_card = "card" in blob or "cards" in (lanes or "") or "nfl" in (lanes or "")
+    if is_card:
+        # Price-setting tokens (year, grade, card number) must survive the
+        # cap even when they sit late in a long title; player/set names in
+        # the leading tokens stay untouched.
+        extras = []
+        m = _YEAR_RE.search(title)
+        if m:
+            extras.append(m.group(1))
+        m = _GRADE_RE.search(title)
+        if m:
+            extras += [m.group(1).upper(), m.group(2)]
+        m = _CARDNUM_RE.search(title)
+        if m:
+            extras.append("#" + m.group(1))
+        have = {t.lower().lstrip("#") for t in keep}
+        keep = keep + [e for e in extras if e.lower().lstrip("#") not in have]
+
+    seen, out = set(), []
+    for t in keep:
+        k = t.lower().lstrip("#")
+        if k not in seen:
+            seen.add(k)
+            out.append(t)
+    return " ".join(out)
+
+
 def build_calculator_rows():
     """Return the calculator as a list-of-lists (header + rows) with live
     Sheets formulas. Reused by both the CSV writer and the cloud Sheets push.
-    Note: formulas use A1-style refs, so row order here defines the refs."""
-    MIN_NET = 20.00
-    EBAY_FEE = 0.13
+    Note: formulas use A1-style refs, so row order here defines the refs.
+
+    Value side: live eBay Browse comps via ebay_comps (same engine as the
+    HiBid build) for the most-contested candidates up to MAX_EBAY_LOOKUPS
+    per run; everything else falls back to the title heuristic. Flag,
+    don't cut: no comp -> VERIFY, never silently dropped."""
+    MIN_NET = float(os.environ.get("NET_FLOOR", "20"))
+    EBAY_FEE = float(os.environ.get("EBAY_FEE_RATE", "0.13"))
+    SLOW_MIN_NET = float(os.environ.get("SLOW_MIN_NET", "40"))
+    MAX_EBAY_LOOKUPS = int(os.environ.get("MAX_EBAY_LOOKUPS", "150"))
+    POLITE_DELAY = float(os.environ.get("POLITE_DELAY", "0.3"))
 
     rows = collect_rows()
     cand = [r for r in rows if r["lanes"] and _to_int(r["num_bids"]) >= 1]
+    # Most-contested first: these get the eBay lookup budget.
+    cand.sort(key=lambda r: -_to_int(r["num_bids"]))
 
+    lookups = 0
     scored = []
     for r in cand:
-        est, conf, note = estimate_sold(r["title"])
+        title = r["title"]
+        est, conf, note = estimate_sold(title)  # heuristic fallback
+        sell_speed = "unknown"
+
+        if lookups < MAX_EBAY_LOOKUPS:
+            comp = ebay_comps.estimate_cached(build_ebay_query(title, r["lanes"]))
+            fresh = "+cache" not in (comp.get("source") or "")
+            if fresh and comp.get("source") in ("browse", "error"):
+                lookups += 1
+                time.sleep(POLITE_DELAY)
+            if comp["resale_usd"]:
+                est = comp["resale_usd"]
+                sell_speed = comp["sell_speed"]
+                conf = "H" if comp["comps"] >= 8 else "M"
+                note = (f"eBay {comp['comps']} asks ~${est:.0f}"
+                        f" · {sell_speed} mover")
+                if _untested(title.lower()):
+                    est = round(est * 0.45, 2)
+                    note += " [UNTESTED x0.45]"
+
         ship = r["shipping"] if r["shipping"] not in ("", None) else 0
         try:
             ship_f = float(ship)
         except Exception:
             ship_f = 0.0
-        ob = _outbound_ship(r["title"])
+        ob = _outbound_ship(title)
+        price = 0.0
+        try:
+            price = float(r["current_price"] or 0)
+        except Exception:
+            pass
         est_max = est - est * EBAY_FEE - ship_f - ob - MIN_NET
+        net_at_current = est - est * EBAY_FEE - price - ship_f - ob
         generic = note.startswith("generic")
         if est_max <= 0 and conf in ("H", "M"):
             status = "SKIP (est below $20)"
+        elif sell_speed == "slow" and net_at_current < SLOW_MIN_NET:
+            status = f"SKIP (slow mover, net < ${SLOW_MIN_NET:.0f})"
         elif generic or conf == "L":
             status = "VERIFY - value uncertain"
         else:
             status = "REVIEW"
         scored.append((r, est, conf, note, ob, ship, est_max, status))
 
-    status_rank = {"REVIEW": 0, "VERIFY - value uncertain": 1, "SKIP (est below $20)": 2}
+    def _status_rank(s):
+        if s == "REVIEW":
+            return 0
+        if s.startswith("VERIFY"):
+            return 1
+        return 2
+
     conf_rank = {"H": 0, "M": 1, "L": 2}
-    scored.sort(key=lambda x: (status_rank.get(x[7], 1),
+    scored.sort(key=lambda x: (_status_rank(x[7]),
                                conf_rank.get(x[2], 3), -x[6]))
 
     header = ["Item", "Lanes", "Status", "Bids", "Current Bid", "Time Left",

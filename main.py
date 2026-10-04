@@ -1,21 +1,26 @@
 """
-main.py - Cloud runner: hourly ShopGoodwill scrape -> emailed to you.
+main.py - Cloud runner: twice-daily ShopGoodwill scrape -> emailed to you.
 
-Runs on Railway. Every RUN_INTERVAL_MIN minutes it:
+Runs on Railway. At each scheduled run time (11:00 AM and 6:00 PM Central
+by default) it:
   1. Scrapes ShopGoodwill (pages/window/lanes from sgw_core.py)
-  2. Builds the combed, flagged, value-ranked worklist
+  2. Builds the combed, flagged, value-ranked worklist with live eBay
+     Browse comps (ebay_comps.py, same engine as the HiBid build)
   3. Emails you a phone-readable summary + attaches the full CSV
 
 No Google Cloud / SMTP needed. Sends via the Resend HTTPS API because
 Railway blocks outbound SMTP ports (465/587).
 
 ENV VARS (set in Railway, never in code):
-  RESEND_API_KEY   -> your Resend API key (starts with re_)
-  EMAIL_TO         -> where to send the worklist
-  EMAIL_FROM       -> sender; 'onboarding@resend.dev' works out of the box
-                      (optional, that's the default)
-  RUN_INTERVAL_MIN -> minutes between runs (optional, default 60)
-  MAX_EMAIL_ROWS   -> top items shown in the email body (optional, default 40)
+  RESEND_API_KEY     -> your Resend API key (starts with re_)
+  EMAIL_TO           -> where to send the worklist
+  EMAIL_FROM         -> sender; 'onboarding@resend.dev' works out of the box
+                        (optional, that's the default)
+  RUN_TIMES          -> comma-separated HH:MM Central run times
+                        (optional, default '11:00,18:00')
+  MAX_EMAIL_ROWS     -> top items shown in the email body (optional, default 40)
+  EBAY_CLIENT_ID     -> eBay App ID for live comps (optional; without it the
+  EBAY_CLIENT_SECRET    scraper falls back to the title heuristics)
 """
 
 import os
@@ -106,7 +111,8 @@ def build_html(matrix, max_rows):
         f"{table('REVIEW &mdash; estimator confident', review)}"
         f"{table('VERIFY &mdash; eyeball these, value uncertain', verify)}"
         f"<p style='color:#888;font-size:12px'>Full list attached as CSV. "
-        f"Estimates are conservative guesses, not real comps.</p>"
+        f"Items noted 'eBay N asks' use live Browse comps (median ask); "
+        f"the rest are conservative title guesses.</p>"
         f"</div>"
     )
     return html
@@ -158,40 +164,42 @@ def run_once():
     print("RUN DONE", time.strftime("%Y-%m-%d %H:%M:%S"))
 
 
-def next_interval_minutes():
-    """Pick the wait (minutes) based on current CENTRAL time + day:
-      Midnight-8AM   -> 180 min (overnight, quiet)
-      8AM-5PM        -> 60 min  (daytime)
-      5PM-Midnight   -> 30 min  (evening rush)
-        ...but Fri & Sat 5PM-Midnight -> 15 min (weekend peak closings)
-    """
-    from datetime import datetime
+RUN_TIMES = os.environ.get("RUN_TIMES", "11:00,18:00")  # Central, HH:MM
+
+
+def next_run_time():
+    """Return (next scheduled run as aware Central datetime, seconds until)."""
+    from datetime import datetime, timedelta
     from zoneinfo import ZoneInfo
-    now = datetime.now(ZoneInfo("America/Chicago"))
-    hour = now.hour
-    weekday = now.weekday()        # Mon=0 ... Fri=4, Sat=5, Sun=6
-    if hour < 8:                   # overnight
-        return 180
-    elif hour < 17:                # daytime
-        return 60
-    else:                          # 5PM-midnight evening rush
-        if weekday in (4, 5):      # Friday or Saturday evening
-            return 15
-        return 30
+    tz = ZoneInfo("America/Chicago")
+    now = datetime.now(tz)
+    slots = []
+    for part in RUN_TIMES.split(","):
+        h, m = part.strip().split(":")
+        slots.append((int(h), int(m)))
+    candidates = []
+    for d in (0, 1):
+        day = now.date() + timedelta(days=d)
+        for h, m in slots:
+            dt = datetime(day.year, day.month, day.day, h, m, tzinfo=tz)
+            if dt > now:
+                candidates.append(dt)
+    nxt = min(candidates)
+    return nxt, (nxt - now).total_seconds()
 
 
 def main():
-    print("Email runner started. Schedule (Central): "
-          "overnight=3h, day=1h, 5pm-midnight=30min (Fri/Sat 15min).")
+    print(f"Email runner started. Runs daily at {RUN_TIMES} Central.")
     while True:
+        nxt, wait = next_run_time()
+        print(f"Next run {nxt.strftime('%a %I:%M %p %Z')} "
+              f"(sleeping {wait / 60:.0f} min)...\n")
+        time.sleep(max(wait, 1))
         try:
             run_once()
         except Exception as e:
             print("ERROR during run:", e)
             traceback.print_exc()
-        wait = next_interval_minutes()
-        print(f"Sleeping {wait} min until next run...\n")
-        time.sleep(wait * 60)
 
 
 if __name__ == "__main__":
