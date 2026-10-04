@@ -190,6 +190,16 @@ def next_run_time():
 
 def main():
     print(f"Email runner started. Runs daily at {RUN_TIMES} Central.")
+    # Test switch: RUN_ON_DEPLOY=1 fires one run immediately on startup
+    # (then the normal schedule resumes). Remove the variable after testing
+    # or every restart/redeploy will send an extra email.
+    if os.environ.get("RUN_ON_DEPLOY") == "1":
+        print("RUN_ON_DEPLOY=1 -> running once now...")
+        try:
+            run_once()
+        except Exception as e:
+            print("ERROR during run:", e)
+            traceback.print_exc()
     while True:
         nxt, wait = next_run_time()
         print(f"Next run {nxt.strftime('%a %I:%M %p %Z')} "
