@@ -35,6 +35,13 @@ import requests
 import sgw_core
 
 
+def central_now(fmt):
+    """Railway's clock is UTC; show times in Central for the email."""
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+    return datetime.now(ZoneInfo("America/Chicago")).strftime(fmt)
+
+
 RESEND_ENDPOINT = "https://api.resend.com/emails"
 
 
@@ -101,7 +108,7 @@ def build_html(matrix, max_rows):
                 f"<table style='border-collapse:collapse;width:100%;font-size:14px'>"
                 f"{head}{body}</table>")
 
-    when = time.strftime("%a %b %d, %I:%M %p")
+    when = central_now("%a %b %d, %I:%M %p")
     html = (
         f"<div style='font-family:sans-serif;max-width:680px'>"
         f"<h2>ShopGoodwill worklist &mdash; {when}</h2>"
@@ -139,7 +146,7 @@ def send_email(matrix):
     payload = {
         "from": from_addr,
         "to": [to_addr],
-        "subject": f"SGW worklist: {n} items ({time.strftime('%I:%M %p')})",
+        "subject": f"SGW worklist: {n} items ({central_now('%I:%M %p')})",
         "html": html,
         "attachments": [
             {"filename": "bid_calculator.csv", "content": csv_b64}
