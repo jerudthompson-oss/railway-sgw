@@ -18,3 +18,13 @@ Ranks each team's RBs by carries and WRs/TEs by targets (RB1/RB2, WR1-WR3, TE1/T
 then repeats the first-quarter carryover test for each role.
 
     python q1_roles_2026.py path/to/data   # needs pbp_2026.parquet and ros_2026.parquet
+
+## q1_defense_explosive.py — by role, split by opponent defense and player type
+
+Splits the carryover test by the opponent's defense (yards per carry or per pass
+attempt allowed in its other games) and by how explosive the player is (share of
+15+ yard runs / 20+ yard catches in his other games). Also compares big first
+quarters built on one long play against ones built on volume.
+
+    python q1_defense_explosive.py path/to/data 2026            # this season
+    python q1_defense_explosive.py path/to/data 2024 2025 2026  # bigger sample
