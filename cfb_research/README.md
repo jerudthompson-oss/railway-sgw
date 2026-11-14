@@ -28,3 +28,12 @@ quarters built on one long play against ones built on volume.
 
     python q1_defense_explosive.py path/to/data 2026            # this season
     python q1_defense_explosive.py path/to/data 2024 2025 2026  # bigger sample
+
+## q1_hot_players.py — hot streaks and rising usage
+
+Point-in-time: norms use only games played before the one being tested. Tests
+whether a hot last 3 games (or rising carries/targets) predicts the whole game,
+and whether a big first quarter carries over more for hot players.
+
+    python q1_hot_players.py path/to/data 2026
+    python q1_hot_players.py path/to/data 2024 2025 2026
