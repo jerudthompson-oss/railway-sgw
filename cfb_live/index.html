@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CFB Live Players</title>
+<style>
+  :root { --bg:#0d1117; --panel:#161b22; --line:#30363d; --text:#e6edf3; --dim:#8b949e;
+          --accent:#58a6ff; --hot:#3fb950; --td:#f0883e; --star:#e3b341; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--text);
+         font:14px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  header { position:sticky; top:0; z-index:5; background:var(--bg); border-bottom:1px solid var(--line);
+           padding:10px 16px; }
+  h1 { margin:0; font-size:16px; display:inline-block; }
+  #status { color:var(--dim); font-size:12px; margin-left:10px; }
+  .dot { display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--dim); margin-right:5px; }
+  .dot.live { background:var(--hot); }
+  .dot.bad { background:#f85149; }
+  .controls { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; align-items:center; }
+  .tabs button, .pill { background:var(--panel); color:var(--text); border:1px solid var(--line);
+           border-radius:6px; padding:6px 12px; font:inherit; cursor:pointer; }
+  .tabs button.on, .pill.on { background:var(--accent); border-color:var(--accent); color:#0d1117; font-weight:600; }
+  input, select { background:var(--panel); color:var(--text); border:1px solid var(--line);
+           border-radius:6px; padding:6px 10px; font:inherit; min-width:0; }
+  input { flex:1 1 140px; max-width:240px; }
+  select { max-width:100%; }
+  main { display:grid; grid-template-columns: minmax(0,1fr) 300px; gap:16px; padding:12px 16px; }
+  @media (max-width: 900px) { main { grid-template-columns: minmax(0,1fr); } }
+  .games { display:flex; gap:8px; overflow-x:auto; padding:8px 16px 0; }
+  .game { flex:0 0 auto; background:var(--panel); border:1px solid var(--line); border-radius:6px;
+          padding:6px 10px; font-size:12px; cursor:pointer; min-width:118px; }
+  .game.on { border-color:var(--accent); }
+  .game .st { color:var(--dim); font-size:11px; }
+  .game.in .st { color:var(--hot); }
+  .game .row { display:flex; justify-content:space-between; gap:10px; font-variant-numeric:tabular-nums; }
+  .wrap { overflow-x:auto; border:1px solid var(--line); border-radius:6px; }
+  table { border-collapse:collapse; width:100%; font-variant-numeric:tabular-nums; }
+  th, td { padding:6px 8px; text-align:right; white-space:nowrap; border-bottom:1px solid var(--line); }
+  th { position:sticky; top:0; background:var(--panel); color:var(--dim); font-weight:600; font-size:12px;
+       cursor:pointer; user-select:none; }
+  th.sorted { color:var(--accent); }
+  td.l, th.l { text-align:left; }
+  tr.fresh td { background:rgba(63,185,80,.13); }
+  tr.final td { color:var(--dim); }
+  .up { color:var(--hot); font-size:11px; margin-left:3px; }
+  .star { cursor:pointer; color:var(--line); font-size:15px; }
+  .star.on { color:var(--star); }
+  .sub { color:var(--dim); font-size:12px; }
+  .grp { border-left:1px solid var(--line); }
+  aside h2 { font-size:13px; margin:0 0 8px; color:var(--dim); text-transform:uppercase; letter-spacing:.04em; }
+  .feed { display:flex; flex-direction:column; gap:6px; }
+  .item { background:var(--panel); border:1px solid var(--line); border-left:3px solid var(--accent);
+          border-radius:6px; padding:6px 8px; font-size:13px; }
+  .item.td { border-left-color:var(--td); }
+  .item .sub { display:block; }
+  .empty { color:var(--dim); padding:24px; text-align:center; }
+</style>
+</head>
+<body>
+<header>
+  <h1>CFB Live Players</h1><span id="status"><span class="dot"></span>connecting…</span>
+  <div class="controls">
+    <div class="tabs" id="tabs"></div>
+    <button class="pill on" id="liveOnly" title="Hide finished games">Live only</button>
+    <button class="pill" id="starOnly" title="Show only starred players">★ Starred</button>
+    <input id="search" placeholder="Search player or team">
+    <select id="gameSel"><option value="">All games</option></select>
+  </div>
+</header>
+<div class="games" id="games"></div>
+<main>
+  <section>
+    <div class="wrap"><table><thead id="head"></thead><tbody id="rows"></tbody></table></div>
+    <div class="empty" id="empty" hidden></div>
+  </section>
+  <aside>
+    <h2>Touchdowns &amp; milestones</h2>
+    <div class="feed" id="feed"></div>
+  </aside>
+</main>
+<script>
+const COLS = {
+  QB: [["pass_ca","C/ATT"],["pass_yds","PASS YDS"],["pass_td","TD"],["pass_int","INT"],
+       ["rush_att","CAR",1],["rush_yds","RUSH YDS"],["rush_td","TD"]],
+  RB: [["rush_att","CAR"],["rush_yds","RUSH YDS"],["rush_avg","AVG"],["rush_td","TD"],["rush_long","LONG"],
+       ["rec","REC",1],["rec_yds","REC YDS"],["rec_td","TD"],["scrim","TOTAL YDS",1]],
+  WR: [["rec","REC"],["rec_yds","REC YDS"],["rec_avg","AVG"],["rec_td","TD"],["rec_long","LONG"],
+       ["rush_att","CAR",1],["rush_yds","RUSH YDS"],["rush_td","TD"]],
+};
+COLS.TE = COLS.WR;
+const DEFAULT_SORT = {QB:"pass_yds", RB:"rush_yds", WR:"rec_yds", TE:"rec_yds"};
+const FRESH = 90;  // seconds a changed row stays highlighted
+let data = null, pos = "QB", sortKey = null, sortDir = -1, liveOnly = true, starOnly = false, game = "";
+let stars = new Set();
+try { stars = new Set(JSON.parse(localStorage.getItem("stars") || "[]")); } catch (e) {}
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+function val(p, k) {
+  if (k === "pass_ca") return p.pass_cmp;
+  if (k === "rush_avg") return p.rush_att ? p.rush_yds / p.rush_att : 0;
+  if (k === "rec_avg") return p.rec ? p.rec_yds / p.rec : 0;
+  if (k === "scrim") return p.rush_yds + p.rec_yds;
+  return p[k] ?? 0;
+}
+function show(p, k) {
+  if (k === "pass_ca") return p.pass_cmp + "/" + p.pass_att;
+  if (k === "rush_avg" || k === "rec_avg") return val(p, k).toFixed(1);
+  return val(p, k);
+}
+function gameLabel(g) {
+  if (g.state === "in") return "Q" + g.period + " " + g.clock;
+  if (g.state === "post") return "Final";
+  return new Date(g.date).toLocaleTimeString([], {hour:"numeric", minute:"2-digit"});
+}
+
+function render() {
+  if (!data) return;
+  const games = Object.fromEntries(data.games.map(g => [g.id, g]));
+  const liveCount = data.games.filter(g => g.state === "in").length;
+  const age = Math.round(data.now - data.updated);
+  $("status").innerHTML = data.error
+    ? '<span class="dot bad"></span>ESPN feed error, retrying'
+    : `<span class="dot ${liveCount ? "live" : ""}"></span>${liveCount} live game${liveCount === 1 ? "" : "s"} · updated ${age}s ago`;
+
+  $("tabs").innerHTML = ["QB","RB","WR","TE"].map(p =>
+    `<button class="${p === pos ? "on" : ""}" data-pos="${p}">${p}</button>`).join("");
+
+  const order = {in:0, post:1, pre:2};
+  const shown = data.games.filter(g => liveOnly ? g.state !== "post" : true)
+    .sort((a, b) => order[a.state] - order[b.state] || a.date.localeCompare(b.date));
+  $("games").innerHTML = shown.map(g => `
+    <div class="game ${g.state} ${g.id === game ? "on" : ""}" data-game="${g.id}">
+      <div class="st">${esc(gameLabel(g))}</div>
+      <div class="row"><span>${esc(g.away.abbr)}</span><b>${esc(g.away.score)}</b></div>
+      <div class="row"><span>${esc(g.home.abbr)}</span><b>${esc(g.home.score)}</b></div>
+    </div>`).join("");
+  const sel = $("gameSel"), keep = game;
+  sel.innerHTML = '<option value="">All games</option>' + shown.filter(g => g.state !== "pre").map(g =>
+    `<option value="${g.id}">${esc(g.away.abbr)} @ ${esc(g.home.abbr)} (${esc(gameLabel(g))})</option>`).join("");
+  sel.value = keep;
+
+  const cols = COLS[pos], key = sortKey || DEFAULT_SORT[pos];
+  $("head").innerHTML = `<tr><th class="l"></th><th class="l">PLAYER</th><th class="l">GAME</th>` +
+    cols.map(([k, label, grp]) =>
+      `<th data-key="${k}" class="${k === key ? "sorted" : ""} ${grp ? "grp" : ""}">${label}${k === key ? (sortDir < 0 ? " ▾" : " ▴") : ""}</th>`).join("") + "</tr>";
+
+  const q = $("search").value.trim().toLowerCase();
+  let rows = data.players.filter(p => p.pos === pos && games[p.gid]);
+  if (liveOnly) rows = rows.filter(p => games[p.gid].state === "in");
+  if (game) rows = rows.filter(p => p.gid === game);
+  if (starOnly) rows = rows.filter(p => stars.has(p.id));
+  if (q) rows = rows.filter(p => (p.name + " " + p.team).toLowerCase().includes(q));
+  if (sortDir < 0) rows.sort((a, b) => (stars.has(b.id) - stars.has(a.id)) || (val(b, key) - val(a, key)));
+  else rows.sort((a, b) => (stars.has(b.id) - stars.has(a.id)) || (val(a, key) - val(b, key)));
+
+  $("rows").innerHTML = rows.map(p => {
+    const g = games[p.gid], fresh = p.upd && data.now - p.upd < FRESH, d = fresh ? (p.delta || {}) : {};
+    const bump = k => {
+      const src = k === "pass_ca" ? "pass_cmp" : k === "scrim" ? null : k;
+      const n = k === "scrim" ? (d.rush_yds || 0) + (d.rec_yds || 0) : d[src];
+      return n ? `<span class="up">${n > 0 ? "+" : ""}${n}</span>` : "";
+    };
+    return `<tr class="${fresh ? "fresh" : ""} ${g.state === "post" ? "final" : ""}">
+      <td class="l"><span class="star ${stars.has(p.id) ? "on" : ""}" data-star="${p.id}">★</span></td>
+      <td class="l"><b>${esc(p.name)}</b> <span class="sub">${esc(p.team)}</span></td>
+      <td class="l sub">${esc(g.away.abbr)} ${esc(g.away.score)} @ ${esc(g.home.abbr)} ${esc(g.home.score)} · ${esc(gameLabel(g))}</td>` +
+      cols.map(([k, , grp]) => `<td class="${grp ? "grp" : ""}">${show(p, k)}${bump(k)}</td>`).join("") + "</tr>";
+  }).join("");
+  const empty = $("empty");
+  empty.hidden = rows.length > 0;
+  if (!rows.length) {
+    const next = data.games.filter(g => g.state === "pre").sort((a, b) => a.date.localeCompare(b.date))[0];
+    empty.textContent = liveOnly && !liveCount
+      ? "No games are live right now." + (next ? " Next kickoff: " + new Date(next.date).toLocaleString([], {weekday:"short", hour:"numeric", minute:"2-digit"}) + ". Turn off “Live only” to see finished games." : "")
+      : "No players match.";
+  }
+
+  $("feed").innerHTML = data.feed.length ? data.feed.map(f => `
+    <div class="item ${f.kind}">${esc(f.text)}
+      <span class="sub">${esc(f.game)} · ${new Date(f.t * 1000).toLocaleTimeString([], {hour:"numeric", minute:"2-digit"})}</span>
+    </div>`).join("") : '<div class="sub">Touchdowns and yardage milestones will appear here as they happen.</div>';
+}
+
+async function load() {
+  try {
+    const r = await fetch("/api/state", {cache: "no-store"});
+    data = await r.json();
+  } catch (e) {
+    if (data) data.error = "offline";
+  }
+  render();
+}
+
+document.addEventListener("click", e => {
+  const t = e.target.closest("[data-pos],[data-key],[data-star],[data-game]") || e.target;
+  if (t.dataset.pos) { pos = t.dataset.pos; sortKey = null; sortDir = -1; }
+  else if (t.dataset.key) { if ((sortKey || DEFAULT_SORT[pos]) === t.dataset.key) sortDir = -sortDir; else { sortKey = t.dataset.key; sortDir = -1; } }
+  else if (t.dataset.star) {
+    stars.has(t.dataset.star) ? stars.delete(t.dataset.star) : stars.add(t.dataset.star);
+    try { localStorage.setItem("stars", JSON.stringify([...stars])); } catch (err) {}
+  }
+  else if (t.dataset.game) { game = game === t.dataset.game ? "" : t.dataset.game; }
+  else if (t.id === "liveOnly") { liveOnly = !liveOnly; t.classList.toggle("on", liveOnly); }
+  else if (t.id === "starOnly") { starOnly = !starOnly; t.classList.toggle("on", starOnly); }
+  else return;
+  render();
+});
+$("search").addEventListener("input", render);
+$("gameSel").addEventListener("change", e => { game = e.target.value; render(); });
+load();
+setInterval(load, 10000);
+</script>
+</body>
+</html>
