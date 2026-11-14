@@ -89,7 +89,8 @@ def parse_players(game_id: str, summary: dict) -> list[dict]:
             for row in cat.get("athletes", []):
                 ath = row.get("athlete", {})
                 pid = str(ath.get("id", ""))
-                if not pid:
+                # ESPN adds a team-total row named "Team"; it is not a player.
+                if not pid or ath.get("displayName", "").strip().lower() in ("team", ""):
                     continue
                 p = out.setdefault(pid, {"id": pid, "gid": game_id, "team": abbr,
                                          "name": ath.get("displayName", "?"),
