@@ -55,6 +55,23 @@
   .item.td { border-left-color:var(--td); }
   .item .sub { display:block; }
   .empty { color:var(--dim); padding:24px; text-align:center; }
+  .alerts { display:flex; flex-direction:column; gap:8px; margin-bottom:18px; }
+  .alert { background:var(--panel); border:1px solid var(--line); border-left:4px solid var(--dim);
+           border-radius:6px; padding:8px 10px; font-size:13px; }
+  .alert.strong { border-left-color:var(--hot); }
+  .alert.moderate { border-left-color:var(--star); }
+  .alert.new { box-shadow:0 0 0 2px var(--hot); }
+  .alert .top { display:flex; justify-content:space-between; gap:8px; align-items:baseline; }
+  .grade { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; }
+  .strong .grade { color:var(--hot); }
+  .moderate .grade { color:var(--star); }
+  .weak .grade { color:var(--dim); }
+  .alert .proj { margin:4px 0; font-variant-numeric:tabular-nums; }
+  .alert ul { margin:4px 0 0; padding-left:16px; color:var(--dim); font-size:12px; }
+  .role { font-size:10px; font-weight:700; padding:1px 4px; border-radius:3px; margin-left:4px;
+          border:1px solid var(--line); color:var(--dim); vertical-align:1px; }
+  .role.RB2 { color:var(--hot); border-color:var(--hot); }
+  #notify { font-size:12px; padding:4px 10px; margin-bottom:8px; }
 </style>
 </head>
 <body>
@@ -75,6 +92,9 @@
     <div class="empty" id="empty" hidden></div>
   </section>
   <aside>
+    <h2>RB2 alerts</h2>
+    <button class="pill" id="notify" hidden>🔔 Notify me</button>
+    <div class="alerts" id="alerts"></div>
     <h2>Touchdowns &amp; milestones</h2>
     <div class="feed" id="feed"></div>
   </aside>
@@ -164,7 +184,7 @@ function render() {
     };
     return `<tr class="${fresh ? "fresh" : ""} ${g.state === "post" ? "final" : ""}">
       <td class="l"><span class="star ${stars.has(p.id) ? "on" : ""}" data-star="${p.id}">★</span></td>
-      <td class="l"><b>${esc(p.name)}</b> <span class="sub">${esc(p.team)}</span></td>
+      <td class="l"><b>${esc(p.name)}</b>${p.role ? `<span class="role ${p.role}">${p.role}</span>` : ""} <span class="sub">${esc(p.team)}</span></td>
       <td class="l sub">${esc(g.away.abbr)} ${esc(g.away.score)} @ ${esc(g.home.abbr)} ${esc(g.home.score)} · ${esc(gameLabel(g))}</td>` +
       cols.map(([k, , grp]) => `<td class="${grp ? "grp" : ""}">${show(p, k)}${bump(k)}</td>`).join("") + "</tr>";
   }).join("");
@@ -177,11 +197,56 @@ function render() {
       : "No players match.";
   }
 
+  const al = data.alerts || [];
+  $("alerts").innerHTML = al.length ? al.map(a => `
+    <div class="alert ${a.grade} ${data.now - a.t < 300 ? "new" : ""}">
+      <div class="top"><b>${esc(a.name)} <span class="sub">${esc(a.team)} · RB2</span></b>
+        <span class="grade">${esc(a.grade)}</span></div>
+      <div class="sub">${esc(a.game)} · ${new Date(a.t * 1000).toLocaleTimeString([], {hour:"numeric", minute:"2-digit"})}</div>
+      <div class="proj">Q1: <b>${a.q1_car} car, ${a.q1_yds} yds</b> (long ${a.q1_long})<br>
+        Rest of game: <b>~${Math.round(a.proj_rest)} yds</b> <span class="sub">(norm ${Math.round(a.norm_rest)}, ${a.boost >= 0 ? "+" : ""}${a.boost}%)</span><br>
+        Projected game: <b>~${Math.round(a.proj_game)} rush yds</b> <span class="sub">(season avg ${Math.round(a.norm_game)})</span></div>
+      <ul>${a.reasons.map(r => `<li>${esc(r)}</li>`).join("")}</ul>
+    </div>`).join("")
+    : `<div class="sub">${data.rb2_ready ? "Fires when the 2nd quarter starts for any team's RB2 with " +
+       "30+ rushing yards in Q1." : "Loading depth charts…"}</div>`;
+  if (data.rb2_ready) $("alerts").insertAdjacentHTML("beforeend",
+    `<div class="sub">Watching ${data.rb2_watch || 0} game${data.rb2_watch === 1 ? "" : "s"} in Q1 · ${data.rb2_checked || 0} checked today</div>`);
+  notifyNew(al);
+
   $("feed").innerHTML = data.feed.length ? data.feed.map(f => `
     <div class="item ${f.kind}">${esc(f.text)}
       <span class="sub">${esc(f.game)} · ${new Date(f.t * 1000).toLocaleTimeString([], {hour:"numeric", minute:"2-digit"})}</span>
     </div>`).join("") : '<div class="sub">Touchdowns and yardage milestones will appear here as they happen.</div>';
 }
+
+// Browser notifications for new RB2 alerts (only while this page is open).
+let seenAlerts = null;
+const canNotify = "Notification" in window;
+function notifyNew(al) {
+  const ids = new Set(al.map(a => a.id));
+  if (seenAlerts === null) { seenAlerts = ids; return; }  // first load: don't replay old alerts
+  const fresh = al.filter(a => !seenAlerts.has(a.id));
+  seenAlerts = ids;
+  if (!fresh.length) return;
+  document.title = `(${fresh.length}) RB2 alert · CFB Live`;
+  if (canNotify && Notification.permission === "granted") {
+    for (const a of fresh) {
+      try {
+        new Notification(`RB2 ${a.grade}: ${a.name} (${a.team})`, {
+          body: `Q1 ${a.q1_car} car ${a.q1_yds} yds. Rest of game ~${Math.round(a.proj_rest)} yds, game ~${Math.round(a.proj_game)}.`,
+          tag: a.id });
+      } catch (e) {}
+    }
+  }
+  if (navigator.vibrate) { try { navigator.vibrate([200, 100, 200]); } catch (e) {} }
+}
+if (canNotify && Notification.permission === "default") $("notify").hidden = false;
+$("notify").addEventListener("click", async () => {
+  try { await Notification.requestPermission(); } catch (e) {}
+  $("notify").hidden = Notification.permission !== "default";
+});
+document.addEventListener("visibilitychange", () => { if (!document.hidden) document.title = "CFB Live Players"; });
 
 async function load() {
   try {

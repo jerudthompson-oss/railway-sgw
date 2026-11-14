@@ -24,6 +24,8 @@ from pathlib import Path
 
 import requests
 
+import rb2
+
 HERE = Path(__file__).parent
 ESPN = "https://site.api.espn.com/apis/site/v2/sports/football/college-football"
 ROSTERS = ("https://github.com/sportsdataverse/sportsdataverse-data/releases/"
@@ -43,7 +45,8 @@ session = requests.Session()
 session.headers["User-Agent"] = "cfb-live-tracker"
 
 lock = threading.Lock()
-state = {"updated": 0, "games": [], "players": [], "feed": [], "error": None}
+state = {"updated": 0, "games": [], "players": [], "feed": [], "error": None,
+         "alerts": [], "rb2_ready": False}
 positions: dict[str, str] = {}     # athlete id -> roster position
 prev: dict[tuple, dict] = {}       # (game id, athlete id) -> last stat line
 changed: dict[tuple, dict] = {}    # (game id, athlete id) -> {"t": epoch, "delta": {...}}
@@ -81,6 +84,7 @@ def parse_players(game_id: str, summary: dict) -> list[dict]:
     out: dict[str, dict] = {}
     for team in summary.get("boxscore", {}).get("players", []):
         abbr = team.get("team", {}).get("abbreviation", "")
+        team_id = str(team.get("team", {}).get("id", ""))
         for cat in team.get("statistics", []):
             name = cat.get("name")
             if name not in ("passing", "rushing", "receiving"):
@@ -92,7 +96,7 @@ def parse_players(game_id: str, summary: dict) -> list[dict]:
                 # ESPN adds a team-total row named "Team"; it is not a player.
                 if not pid or ath.get("displayName", "").strip().lower() in ("team", ""):
                     continue
-                p = out.setdefault(pid, {"id": pid, "gid": game_id, "team": abbr,
+                p = out.setdefault(pid, {"id": pid, "gid": game_id, "team": abbr, "team_id": team_id,
                                          "name": ath.get("displayName", "?"),
                                          **{k: 0 for k in STAT_KEYS}})
                 s = dict(zip(keys, row.get("stats", [])))
@@ -125,6 +129,9 @@ def parse_players(game_id: str, summary: dict) -> list[dict]:
             p["pos_guess"] = True
         if pos in SKILL:
             p["pos"] = SKILL[pos]
+            role = rb2.role_of(p["id"])
+            if role and p["pos"] == "RB":
+                p["role"] = role
             players.append(p)
     return players
 
@@ -146,7 +153,7 @@ def fetch_scoreboard() -> list[dict]:
             sides = {}
             for c in comp["competitors"]:
                 t = c["team"]
-                sides[c["homeAway"]] = {"abbr": t.get("abbreviation", ""),
+                sides[c["homeAway"]] = {"id": str(t.get("id", "")), "abbr": t.get("abbreviation", ""),
                                         "name": t.get("shortDisplayName", ""),
                                         "score": c.get("score", ""),
                                         "rank": (c.get("curatedRank") or {}).get("current", 99)}
@@ -207,6 +214,10 @@ def poll_once() -> None:
                 continue
             note_changes(game, rows, quiet=game["id"] not in seen_games)
             seen_games.add(game["id"])
+            try:
+                rb2.observe(game, rows)
+            except Exception as exc:
+                print(f"rb2 observe {game['id']} failed: {exc}", flush=True)
             if game["state"] == "post":
                 final_cache[game["id"]] = rows
             else:
@@ -216,7 +227,9 @@ def poll_once() -> None:
             players.extend(rows)
     with lock:
         state.update(updated=time.time(), games=games, players=players,
-                     feed=list(reversed(feed[-60:])), error=None)
+                     feed=list(reversed(feed[-60:])), error=None,
+                     alerts=list(reversed(rb2.alerts)), rb2_ready=bool(rb2.roles),
+                     rb2_watch=len(rb2.q1_latest), rb2_checked=len(rb2.q1_final))
 
 
 def _safe_summary(game_id: str):
@@ -229,8 +242,11 @@ def _safe_summary(game_id: str):
 
 def poll_forever() -> None:
     load_positions()
+    rb2.load_context(session, SEASON)
     while True:
         started = time.time()
+        if time.time() - rb2.loaded_at > 12 * 3600:
+            rb2.load_context(session, SEASON)
         try:
             poll_once()
         except Exception as exc:
